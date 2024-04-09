@@ -1,0 +1,45 @@
+1.SELECT CustomerID FROM customerinteractions 
+WHERE Month="March" AND Year=2024 AND 
+DataUsed>(SELECT AVG(DataUsed) FROM customerinteractions WHERE Month="March" AND Year=2024);
+ans
+
+2.SELECT CustomerID FROM customerinteractions WHERE Month="March" AND Year=2024
+group by CustomerID HAVING MAX(CallDuration) AND COUNT(*)>=2;
+
+3.
+
+4.SELECT ProductTypeID,SUM(TotalSalesAmount) AS TOTAL_SALES FROM quarterlysales 
+WHERE ProductTypeID=1 GROUP BY ProductTypeID;
+
+5.
+SELECT ProductTypeID FROM quarterlysales 
+WHERE TotalSalesAmount= (SELECT MAX(TotalSalesAmount) FROM quarterlysales WHERE Quarter="Q1");
+
+ 6.
+
+SELECT TotalSalesAmount/UnitsSold AS average_sales_price FROM quarterlysales 
+WHERE Quarter="Q2" AND ProductTypeID=1 AND Year=2024;
+
+7.
+SELECT Region FROM sectorenergyconsumption 
+WHERE ConsumptionKWh> (SELECT AVG(ConsumptionKWh) FROM sectorenergyconsumption WHERE EnergySource IN ("Solar","Wind"))
+AND Month="March" AND Year=2024;
+
+8.
+
+9.SELECT EnergySource,SUM(ConsumptionKWh) FROM sectorenergyconsumption WHERE Month="February" and Year=2024 and EnergySource="Fossil Fuels"
+group by EnergySource
+union
+SELECT GROUP_CONCAT(EnergySource SEPARATOR ","),SUM(ConsumptionKWh) FROM sectorenergyconsumption WHERE Month="February" and Year=2024 and EnergySource<>"Fossil Fuels";
+
+10.SELECT CustomerName FROM insuranceactivities
+WHERE Investigation="No" AND
+(FeedbackScore>(SELECT AVG(FeedbackScore) FROM insuranceactivities) OR ClaimsCount>(SELECT AVG(ClaimsCount) FROM insuranceactivities));
+
+11.
+SELECT SUM(AnnualPremium) FROM insuranceactivities
+WHERE Investigation="No" AND
+(FeedbackScore>(SELECT AVG(FeedbackScore) FROM insuranceactivities) AND ClaimsCount>0);
+12.
+SELECT PolicyType, AVG(FeedbackScore),ClaimsCount FROM insuranceactivities 
+GROUP BY PolicyType,ClaimsCount;
