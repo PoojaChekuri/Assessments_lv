@@ -1,0 +1,78 @@
+1.
+SELECT machine_id FROM l1_maintenance_records 
+WHERE MONTH(maintenance_date)=3 AND YEAR(maintenance_date)=2024
+AND cost>(SELECT AVG(cost) FROM l1_maintenance_records WHERE 
+ MONTH(maintenance_date)=3 AND YEAR(maintenance_date)=2024);
+
+2.
+
+SELECT maintenance_type,COUNT(*) AS frequency FROM l1_maintenance_records
+ WHERE MONTH(maintenance_date)=3 AND YEAR(maintenance_date)=2024
+ GROUP BY maintenance_type ORDER BY frequency;
+
+3.
+SELECT technician_name,COUNT(*),ROUND(AVG(cost),2) AS AVERAGE_COST
+ FROM l1_maintenance_records 
+ GROUP BY technician_name ORDER BY COUNT(*) DESC,AVERAGE_COST DESC;
+
+4.
+SELECT product_id,
+(incident_count_pre_update-incident_count_post_update)/(incident_count_pre_update)*100 
+AS PERCENTAGE_REDUCTION_IN_INCIDENT_COUNT FROM l2_updates;
+SELECT AVG(incident_count_pre_update-incident_count_post_update) AS average 
+FROM l2_updates;
+
+5.
+SELECT update_id FROM l2_updates 
+WHERE user_feedback_score=(SELECT MAX(user_feedback_score) FROM l2_updates);
+
+6.SELECT product_id,(incident_count_pre_update-incident_count_post_update)/(incident_count_pre_update)*100 
+AS PERCENTAGE_DECREASE_IN_INCIDENTS FROM l2_updates GROUP BY product_id
+ORDER BY PERCENTAGE_DECREASE_IN_INCIDENTS ASC;
+
+7.
+SELECT p.patient_name,f.facility_name,v.reason_for_visit,t.outcome FROM
+l3_patients p JOIN l3_visits v USING(patient_id) 
+JOIN l3_treatments t USING(visit_id)
+JOIN l3_facilities f ON v.facility_id=f.facility_id
+WHERE YEAR(visit_date)=2024 AND MONTH(visit_date)=3;
+
+8.
+
+SELECT f.facility_name,COUNT(*) AS MAX_EMERGENCIES FROM l3_facilities f 
+JOIN l3_visits v USING(facility_id) WHERE reason_for_visit="Emergency" 
+AND YEAR(visit_date)=2024 AND MONTH(visit_date)=3
+GROUP BY f.facility_name
+ORDER BY COUNT(*) DESC LIMIT 1;
+
+9.
+SELECT insurance_provider FROM l3_patients p
+JOIN l3_visits USING(patient_id)
+JOIN l3_treatments USING(visit_id) 
+WHERE outcome="Complicated" 
+AND YEAR(visit_date)=2024
+AND MONTH(visit_date)<4
+GROUP BY insurance_provider
+ORDER BY COUNT(*) DESC LIMIT 1;
+
+10.
+WITH ABC AS (
+SELECT product_name,category,price*quantity AS PRICE FROM l4_sales s 
+JOIN l4_products p USING(product_id) 
+WHERE YEAR(sale_date)=2024 AND MONTH(sale_date)=3)
+SELECT product_name,category,SUM(PRICE) FROM ABC
+GROUP BY product_name,category HAVING SUM(PRICE) IN
+(SELECT MAX(PRICE) FROM ABC GROUP BY CATEGORY) ;
+
+11.
+create OR REPLACE VIEW total_sales as 
+SELECT region,sum(quantity*price) FROM l4_products p join l4_sales s USING(product_id)
+JOIN l4_stores st USING(store_id) GROUP BY region;
+SELECT region FROM total_sales WHERE YEAR(sale_date)=2024
+AND MONTH(sale_date)<4 AND sum(quantity*price)=(
+SELECT MAX(sum(quantity*price)) FROM total_sales);
+
+12.
+
+
+
