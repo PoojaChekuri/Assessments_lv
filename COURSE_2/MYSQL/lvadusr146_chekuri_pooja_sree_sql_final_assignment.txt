@@ -1,0 +1,134 @@
+1.
+SELECT product_category,AVG(sales_amount) FROM products p JOIN sales_records
+USING(product_id) JOIN customers USING(customer_id) WHERE customer_name='PharmaCo Inc.'
+AND sales_date>date_sub(current_date(), INTERVAL 1 MONTH) GROUP BY product_category;
+
+2.
+WITH RANK_TABLE AS
+(SELECT product_name,sales_amount,RANK() OVER (ORDER BY sales_amount DESC) as ranking
+FROM products p 
+JOIN sales_records s USING(product_id) WHERE YEAR(sales_date)=YEAR(NOW()))
+SELECT product_name,ranking FROM RANK_TABLE
+ORDER BY ranking limit 3;
+
+3.
+SET @total_sales := (SELECT SUM(sales_amount) FROM sales_records);
+WITH percentage AS
+(SELECT customer_id,customer_name,
+(SUM(sales_amount)/@total_sales)*100 AS percentage_contribution
+FROM sales_records JOIN customers USING(customer_id) 
+GROUP BY customer_id,customer_name)
+SELECT customer_id,customer_name,percentage_contribution,
+RANK() OVER(ORDER BY percentage_contribution DESC) FROM percentage;
+
+4.
+WITH buyers AS 
+(SELECT customer_id,customer_name,COUNT(
+CASE WHEN sales_date BETWEEN '2024-04-01' AND '2024-04-30' THEN 1
+WHEN sales_date BETWEEN '2024-03-01' AND '2024-03-31' THEN 1
+WHEN sales_date BETWEEN '2024-02-01' AND '2024-02-29' THEN 1
+WHEN sales_date BETWEEN '2024-01-01' AND '2024-01-31' THEN 1
+WHEN sales_date BETWEEN '2023-12-01' AND '2023-12-31' THEN 1
+WHEN sales_date BETWEEN '2023-11-01' AND '2023-11-30' THEN 1
+ELSE 0 END)AS count_times FROM customers JOIN sales_records USING(customer_id) 
+GROUP BY customer_id,customer_name)
+SELECT customer_id,customer_name,
+(CASE WHEN count_times>=4 THEN 'Consistent Buyers'
+ELSE 'Occasional Buyers' END ) AS type_of_buyers FROM buyers;
+
+5.
+SELECT CONCAT(departure_airport,'-',arrival_airport) AS flight_route,
+AVG(ticket_price)
+FROM tickets t JOIN flights f USING(flight_id)
+GROUP BY departure_airport,arrival_airport;
+
+6.
+SELECT flight_number,departure_date,
+count(*) OVER (PARTITION BY flight_number) AS tickets_sold
+FROM tickets t JOIN flights f USING(flight_id)
+WHERE YEAR(departure_date)=YEAR(current_date()) AND 
+MONTH(departure_date)=MONTH(current_date())-1
+ORDER BY tickets_sold;
+
+7.
+SELECT DISTINCT passenger_name,
+SUM(ticket_price) OVER (Partition by passenger_name) AS total_amount_spent,
+frequent_flyer_status
+FROM passengers join tickets USING(passenger_id) 
+ORDER BY total_amount_spent DESC LIMIT 5;
+
+8.
+SELECT MONTH(ticket_date) AS month ,COUNT(*) AS no_of_tickets_sold_in_month
+FROM tickets
+GROUP BY MONTH(ticket_date)
+ORDER BY COUNT(*) DESC limit 1;
+
+9.
+SELECT player_name,game_genre,
+AVG(datediff(play_date,registration_date)) FROM playerscores JOIN games USING(game_id)
+JOIN players USING(player_id) 
+GROUP BY player_name,game_genre;
+
+10.
+SELECT game_name,count(distinct player_id) as no_of_players FROM playerscores join games USING(game_id)
+GROUP BY game_name
+ORDER BY no_of_players desc limit 3;
+
+11.
+SELECT game_name,AVG(score) AS avg_score,MAX(score) as max_score,
+count(distinct player_id) as no_of_players
+FROM playerscores join games USING(game_id)
+GROUP BY game_name;
+
+12.
+SELECT player_name,registration_date,MAX(play_date) 
+FROM playerscores JOIN games USING(game_id)
+JOIN players USING(player_id) 
+GROUP BY player_name HAVING MAX(play_date)<date_sub(current_date(), INTERVAL 1 MONTH);
+
+13.
+SELECT doctor_id,doctor_name,sum(cost) as total_cost 
+FROM treatments t JOIN doctors d USING(doctor_id)
+GROUP BY doctor_id,doctor_name
+order by total_cost desc ;
+
+14.
+SELECT treatment_name,SUM(cost),
+(SUM(cost)/(SELECT SUM(cost) FROM treatments))*100 as percentage
+FROM treatments group by treatment_name;
+
+15.
+SELECT patient_id,patient_name,admission_date,discharge_date FROM patients
+WHERE patient_id IN 
+(SELECT patient_id FROM patients GROUP BY patient_id having count(*)>2);
+
+16.
+SELECT gender,diagnosis, AVG(DATEDIFF(discharge_date,admission_date))
+OVER(PARTITION BY gender,diagnosis) FROM patients;
+
+17.
+select department,semester,AVG(grade)
+OVER (PARTITION BY department,semester)
+from enrollments JOIN courses using(course_id);
+
+18.
+SELECT distinct major,COUNT(*) OVER (PARTITION by major,enrollment_year) as total_students_enrolled,
+enrollment_year
+from enrollments JOIN students using(student_id);
+
+19.
+SELECT student_id,student_name,semester,sum(credits)
+from enrollments JOIN students using(student_id) 
+JOIN courses USING(course_id) 
+GROUP BY student_id,student_name,semester 
+HAVING sum(credits)>50;
+
+20.
+WITH TOP AS
+(SELECT course_name,enrollment_year,COUNT(*) AS students_enrolled
+from enrollments JOIN students using(student_id) 
+JOIN courses USING(course_id)
+GROUP BY course_name,enrollment_year)
+SELECT course_name,enrollment_year,students_enrolled,
+RANK() OVER (PARTITION BY enrollment_year ORDER BY students_enrolled DESC) AS rank_
+FROM TOP;
