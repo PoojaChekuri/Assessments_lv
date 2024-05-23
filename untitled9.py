@@ -10,8 +10,8 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 
-data = pd.read_csv('/content/Group - 3 org.csv')
-#data = pd.DataFrame('/content/Group - 3 org.csv')
+data = pd.read_csv("C:\Users\poojasree.c.lv\Downloads\Group - 3 org.csv")
+#data = pd.DataFrame("C:\Users\poojasree.c.lv\Downloads\Group - 3 org.csv")
 
 # Function to calculate revenue based on discount rate
 def calculate_revenue(total_sales, discount_rate):
